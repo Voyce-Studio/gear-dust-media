@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VOYCE /films new hero — preview</title>
+<style>
+  html,body{margin:0;background:#0c0c0c;color:#fff;font-family:'Helvetica Neue',Arial,sans-serif;}
+  .preview-note{position:fixed;top:0;left:0;right:0;z-index:50;background:#111;
+    border-bottom:1px solid #333;padding:.6em 1em;font-size:.8rem;letter-spacing:.03em;
+    color:#9a9a9a;text-align:center;}
+  .preview-note b{color:#fff;}
+  .mock-section{padding:14vh 8%;border-top:1px solid #222;min-height:60vh;
+    display:flex;flex-direction:column;justify-content:center;}
+  .mock-section .eyebrow{font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;
+    color:#666;margin-bottom:.8em;}
+  .mock-section h2{font-size:clamp(1.6rem,4vw,2.8rem);font-weight:500;margin:0;max-width:22ch;}
+  .mock-hero{background:#151515;min-height:100vh;display:flex;align-items:flex-end;padding:8% 6%;}
+  .mock-hero h1{font-size:clamp(2rem,6vw,4rem);font-weight:500;margin:0 0 .3em;}
+  .mock-hero p{max-width:40ch;color:#aaa;line-height:1.5;}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2em;margin-top:1.5em;}
+  .grid div{border-top:1px solid #333;padding-top:1em;}
+  .grid h3{font-size:1rem;margin:0 0 .4em;}
+  .grid p{font-size:.85rem;color:#888;margin:0;}
+</style>
+</head>
+<body>
+
+<div class="preview-note">Preview of a <b>new hero section</b> inserted on /films, between the existing top hero and "what we make". Scroll through.</div>
+
+<div class="mock-hero">
+  <div>
+    <h1>films</h1>
+    <p>Our cinematic and commercial arm: commercials, brand campaigns, automotive, music videos and artist films. Led by Creative Director Michael Oliveira.</p>
+  </div>
+</div>
+
+<div id="vgs-hero-films" class="vgsh-wrap" aria-label="On set">
+  <div class="vgsh-pin">
+    <video class="vgsh-video" muted playsinline preload="none" webkit-playsinline=""></video>
+    <div class="vgsh-caption">
+      <span class="vgsh-t">On Set</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  #vgs-hero-films.vgsh-wrap{position:relative;background:#000;height:220vh;}
+  #vgs-hero-films .vgsh-pin{position:sticky;top:0;left:0;width:100%;height:100vh;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;background:#000;}
+  #vgs-hero-films.vgsh-fixed .vgsh-pin{position:fixed;top:0;left:0;}
+  #vgs-hero-films.vgsh-below .vgsh-pin{position:absolute;top:auto;bottom:0;}
+  #vgs-hero-films .vgsh-video{width:100%;height:100%;object-fit:cover;opacity:0;
+    transition:opacity .6s ease;}
+  #vgs-hero-films .vgsh-video.vgsh-ready{opacity:1;}
+  #vgs-hero-films .vgsh-caption{position:absolute;left:6%;bottom:8%;color:#fff;font-family:
+    'Helvetica Neue',Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;
+    z-index:2;pointer-events:none;text-shadow:0 2px 12px rgba(0,0,0,.6);}
+  #vgs-hero-films .vgsh-caption .vgsh-t{font-size:clamp(1.4rem,3vw,2.4rem);font-weight:500;}
+  @media (prefers-reduced-motion: reduce){
+    #vgs-hero-films .vgsh-video{transition:none;}
+  }
+</style>
+
+<div class="mock-section">
+  <div class="eyebrow">Below — existing page content</div>
+  <h2>what we make</h2>
+  <div class="grid">
+    <div><h3>commercials</h3><p>Brand campaigns and advertising, from single spots to full campaign builds.</p></div>
+    <div><h3>automotive and product</h3><p>Vehicles, hardware and product films built around motion and surface.</p></div>
+    <div><h3>music videos</h3><p>Performance, narrative and concept films for artists on and off the label.</p></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var CDN_BASE = 'https://cdn.jsdelivr.net/gh/Voyce-Studio/gear-dust-media@main/';
+  var stage = document.getElementById('vgs-hero-films');
+  if (!stage) return;
+
+  var video = stage.querySelector('.vgsh-video');
+  var state = { ready: false, loading: false };
+
+  function loadVideo(){
+    if (state.loading || state.ready) return;
+    state.loading = true;
+    video.addEventListener('loadedmetadata', function(){
+      state.ready = true;
+      video.classList.add('vgsh-ready');
+    }, { once: true });
+    video.src = CDN_BASE + '18_CAMERA_CRANE_AND_DOLLY.mp4';
+    video.load();
+  }
+
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting) loadVideo();
+    });
+  }, { rootMargin: '50% 0px 50% 0px' });
+  io.observe(stage);
+
+  var ticking = false;
+  function updateScroll(){
+    ticking = false;
+    var vh = window.innerHeight;
+    var rect = stage.getBoundingClientRect();
+    var total = stage.offsetHeight - vh;
+    if (total <= 0) return;
+
+    if (rect.top > 0) {
+      stage.classList.remove('vgsh-fixed','vgsh-below');
+    } else if (rect.top <= 0 && rect.bottom > vh) {
+      stage.classList.add('vgsh-fixed');
+      stage.classList.remove('vgsh-below');
+    } else if (rect.bottom <= vh) {
+      stage.classList.remove('vgsh-fixed');
+      stage.classList.add('vgsh-below');
+    }
+
+    var progress = Math.min(1, Math.max(0, -rect.top / total));
+    if (state.ready && video.duration) {
+      var t = progress * video.duration;
+      if (Math.abs(video.currentTime - t) > 0.03) {
+        try { video.currentTime = t; } catch(e){}
+      }
+    }
+  }
+
+  window.addEventListener('scroll', function(){
+    if (!ticking) { ticking = true; requestAnimationFrame(updateScroll); }
+  }, { passive: true });
+  window.addEventListener('resize', updateScroll);
+  updateScroll();
+})();
+</script>
+</body>
+</html>

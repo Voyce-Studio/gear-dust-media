@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VOYCE center-section hero — preview</title>
+<style>
+  html,body{margin:0;background:#0c0c0c;color:#fff;font-family:'Helvetica Neue',Arial,sans-serif;}
+  .preview-note{position:fixed;top:0;left:0;right:0;z-index:50;background:#111;
+    border-bottom:1px solid #333;padding:.6em 1em;font-size:.8rem;letter-spacing:.03em;
+    color:#9a9a9a;text-align:center;}
+  .preview-note b{color:#fff;}
+  .mock-section{padding:14vh 8% ;border-top:1px solid #222;min-height:40vh;
+    display:flex;flex-direction:column;justify-content:center;}
+  .mock-section .eyebrow{font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;
+    color:#666;margin-bottom:.8em;}
+  .mock-section h2{font-size:clamp(1.6rem,4vw,2.8rem);font-weight:500;margin:0;
+    max-width:20ch;}
+  .mock-section.was-here{background:repeating-linear-gradient(135deg,#151515,#151515 12px,#1a1a1a 12px,#1a1a1a 24px);}
+  .mock-section.was-here .eyebrow{color:#8a8a8a;}
+</style>
+</head>
+<body>
+
+<div class="preview-note">Preview of the <b>center-section swap</b> on /recording-studio — scroll through. The hatched block shows the fisheye room photo being replaced.</div>
+
+<div class="mock-section">
+  <div class="eyebrow">Above — existing page content</div>
+  <h2>Header, nav, and the sections that currently come before the room photo.</h2>
+</div>
+
+<div class="mock-section was-here">
+  <div class="eyebrow">Currently here: the fisheye room-panorama section</div>
+  <h2>This gets removed — the microphone effect below takes its place.</h2>
+</div>
+
+<div id="vgs-hero" class="vgsh-wrap" aria-label="Recording studio">
+  <div class="vgsh-pin">
+    <video class="vgsh-video" muted playsinline preload="none" webkit-playsinline=""></video>
+    <div class="vgsh-caption">
+      <span class="vgsh-t">Recording Studio</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .vgsh-wrap{position:relative;background:#000;height:220vh;}
+  .vgsh-pin{position:sticky;top:0;left:0;width:100%;height:100vh;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;background:#000;}
+  #vgs-hero.vgsh-fixed .vgsh-pin{position:fixed;top:0;left:0;}
+  #vgs-hero.vgsh-below .vgsh-pin{position:absolute;top:auto;bottom:0;}
+  .vgsh-video{width:100%;height:100%;object-fit:cover;opacity:0;
+    transition:opacity .6s ease;}
+  .vgsh-video.vgsh-ready{opacity:1;}
+  .vgsh-caption{position:absolute;left:6%;bottom:8%;color:#fff;font-family:
+    'Helvetica Neue',Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;
+    z-index:2;pointer-events:none;text-shadow:0 2px 12px rgba(0,0,0,.6);}
+  .vgsh-caption .vgsh-t{font-size:clamp(1.4rem,3vw,2.4rem);font-weight:500;}
+  @media (prefers-reduced-motion: reduce){
+    .vgsh-video{transition:none;}
+  }
+</style>
+
+<div class="mock-section">
+  <div class="eyebrow">Below — existing page content</div>
+  <h2>VOYCE Studios section and everything else that currently follows the room photo.</h2>
+</div>
+
+<script>
+(function(){
+  var CDN_BASE = 'https://cdn.jsdelivr.net/gh/Voyce-Studio/gear-dust-media@main/';
+  var stage = document.getElementById('vgs-hero');
+  if (!stage) return;
+
+  var video = stage.querySelector('.vgsh-video');
+  var state = { ready: false, loading: false };
+
+  function loadVideo(){
+    if (state.loading || state.ready) return;
+    state.loading = true;
+    video.addEventListener('loadedmetadata', function(){
+      state.ready = true;
+      video.classList.add('vgsh-ready');
+    }, { once: true });
+    video.src = CDN_BASE + '01_MICROPHONE.mp4';
+    video.load();
+  }
+
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting) loadVideo();
+    });
+  }, { rootMargin: '50% 0px 50% 0px' });
+  io.observe(stage);
+
+  var ticking = false;
+  function updateScroll(){
+    ticking = false;
+    var vh = window.innerHeight;
+    var rect = stage.getBoundingClientRect();
+    var total = stage.offsetHeight - vh;
+    if (total <= 0) return;
+
+    if (rect.top > 0) {
+      stage.classList.remove('vgsh-fixed','vgsh-below');
+    } else if (rect.top <= 0 && rect.bottom > vh) {
+      stage.classList.add('vgsh-fixed');
+      stage.classList.remove('vgsh-below');
+    } else if (rect.bottom <= vh) {
+      stage.classList.remove('vgsh-fixed');
+      stage.classList.add('vgsh-below');
+    }
+
+    var progress = Math.min(1, Math.max(0, -rect.top / total));
+    if (state.ready && video.duration) {
+      var t = progress * video.duration;
+      if (Math.abs(video.currentTime - t) > 0.03) {
+        try { video.currentTime = t; } catch(e){}
+      }
+    }
+  }
+
+  window.addEventListener('scroll', function(){
+    if (!ticking) { ticking = true; requestAnimationFrame(updateScroll); }
+  }, { passive: true });
+  window.addEventListener('resize', updateScroll);
+  updateScroll();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VOYCE gear scroll-scrub — preview</title>
+<style>
+  html,body{margin:0;background:#000;color:#fff;font-family:'Helvetica Neue',Arial,sans-serif;}
+  .preview-note{position:fixed;top:0;left:0;right:0;z-index:50;background:#111;
+    border-bottom:1px solid #333;padding:.6em 1em;font-size:.8rem;letter-spacing:.03em;
+    color:#9a9a9a;text-align:center;}
+  .preview-note b{color:#fff;}
+  .section-label{padding:3em 6% 1em;font-size:.75rem;letter-spacing:.12em;
+    text-transform:uppercase;color:#777;border-top:1px solid #222;}
+  .section-label:first-of-type{border-top:none;padding-top:5em;}
+</style>
+</head>
+<body>
+
+<div class="preview-note">This is a local preview, not the live site — <b>scroll to see each item play through</b>, one full viewport-height hold per item.</div>
+
+<div class="section-label">/recording-studio — 16 items</div>
+
+<div id="vgs-root" class="vgs-wrap" aria-label="Studio gear showcase">
+  <div class="vgs-stage" data-file="01_MICROPHONE.mp4" data-num="01" data-label="Microphone"></div>
+  <div class="vgs-stage" data-file="02_CINEMA_CAMERA.mp4" data-num="02" data-label="Cinema Camera"></div>
+  <div class="vgs-stage" data-file="03_RECORDING_ROOM.mp4" data-num="03" data-label="Recording Room"></div>
+  <div class="vgs-stage" data-file="04_REEL_TO_REEL.mp4" data-num="04" data-label="Reel to Reel"></div>
+  <div class="vgs-stage" data-file="05_FILM_PROJECTOR.mp4" data-num="05" data-label="Film Projector"></div>
+  <div class="vgs-stage" data-file="06_STUDIO_HEADPHONES.mp4" data-num="06" data-label="Studio Headphones"></div>
+  <div class="vgs-stage" data-file="07_BOOM_AND_FIELD_RECORDER.mp4" data-num="07" data-label="Boom &amp; Field Recorder"></div>
+  <div class="vgs-stage" data-file="08_CINEMA_LENS_OPTICS.mp4" data-num="08" data-label="Cinema Lens Optics"></div>
+  <div class="vgs-stage" data-file="09_ROBOTIC_CAMERA_ARM.mp4" data-num="09" data-label="Robotic Camera Arm"></div>
+  <div class="vgs-stage" data-file="10_MODULAR_SYNTHESIZER.mp4" data-num="10" data-label="Modular Synthesizer"></div>
+  <div class="vgs-stage" data-file="11_VALVE_PREAMP_RACK.mp4" data-num="11" data-label="Valve Preamp Rack"></div>
+  <div class="vgs-stage" data-file="12_DRUM_KIT.mp4" data-num="12" data-label="Drum Kit"></div>
+  <div class="vgs-stage" data-file="13_GRAND_PIANO_MECHANISM.mp4" data-num="13" data-label="Grand Piano Mechanism"></div>
+  <div class="vgs-stage" data-file="14_GUITAR_AND_PEDALBOARD.mp4" data-num="14" data-label="Guitar &amp; Pedalboard"></div>
+  <div class="vgs-stage" data-file="15_STUDIO_MONITORS.mp4" data-num="15" data-label="Studio Monitors"></div>
+  <div class="vgs-stage" data-file="16_VOCAL_BOOTH.mp4" data-num="16" data-label="Vocal Booth"></div>
+</div>
+
+<div class="section-label">/films — 4 items</div>
+
+<div id="vgs-root-films" class="vgs-wrap" aria-label="Film production gear showcase">
+  <div class="vgs-stage" data-file="17_CINEMA_LIGHTING_RIG.mp4" data-num="01" data-label="Cinema Lighting Rig"></div>
+  <div class="vgs-stage" data-file="18_CAMERA_CRANE_AND_DOLLY.mp4" data-num="02" data-label="Camera Crane &amp; Dolly"></div>
+  <div class="vgs-stage" data-file="19_COLOR_GRADING_CONSOLE.mp4" data-num="03" data-label="Colour-Grading Console"></div>
+  <div class="vgs-stage" data-file="20_FOLEY_STAGE.mp4" data-num="04" data-label="Foley Stage"></div>
+</div>
+
+<style>
+  .vgs-wrap{position:relative;background:#000;}
+  .vgs-stage{position:relative;height:220vh;}
+  .vgs-stage:last-child{height:100vh;}
+  .vgs-pin{position:sticky;top:0;left:0;width:100%;height:100vh;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;background:#000;}
+  .vgs-stage.vgs-fixed .vgs-pin{position:fixed;top:0;left:0;}
+  .vgs-stage.vgs-below .vgs-pin{position:absolute;top:auto;bottom:0;}
+  .vgs-video{width:100%;height:100%;object-fit:cover;opacity:0;
+    transition:opacity .6s ease;}
+  .vgs-video.vgs-ready{opacity:1;}
+  .vgs-caption{position:absolute;left:6%;bottom:8%;color:#fff;font-family:
+    'Helvetica Neue',Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;
+    z-index:2;pointer-events:none;text-shadow:0 2px 12px rgba(0,0,0,.6);}
+  .vgs-caption .vgs-n{font-size:.75rem;opacity:.6;display:block;margin-bottom:.4em;}
+  .vgs-caption .vgs-t{font-size:clamp(1.4rem,3vw,2.4rem);font-weight:500;}
+  .vgs-progress{position:absolute;right:6%;bottom:8%;width:2px;height:120px;
+    background:rgba(255,255,255,.25);z-index:2;}
+  .vgs-progress i{position:absolute;top:0;left:0;width:100%;background:#fff;
+    height:0%;}
+  @media (prefers-reduced-motion: reduce){
+    .vgs-video{transition:none;}
+  }
+</style>
+
+<script>
+(function(){
+  var CDN_BASE = 'https://cdn.jsdelivr.net/gh/Voyce-Studio/gear-dust-media@main/';
+
+  function wireUp(rootId){
+    var stages = Array.prototype.slice.call(document.querySelectorAll('#' + rootId + ' .vgs-stage'));
+    if (!stages.length) return;
+
+    stages.forEach(function(stage){
+      var pin = document.createElement('div');
+      pin.className = 'vgs-pin';
+
+      var video = document.createElement('video');
+      video.className = 'vgs-video';
+      video.muted = true;
+      video.playsInline = true;
+      video.preload = 'none';
+      video.setAttribute('webkit-playsinline', '');
+
+      var caption = document.createElement('div');
+      caption.className = 'vgs-caption';
+      caption.innerHTML = '<span class="vgs-n">' + stage.dataset.num + ' / ' + String(stages.length).padStart(2,'0') + '</span>' +
+                           '<span class="vgs-t">' + stage.dataset.label + '</span>';
+
+      var progress = document.createElement('div');
+      progress.className = 'vgs-progress';
+      var bar = document.createElement('i');
+      progress.appendChild(bar);
+
+      pin.appendChild(video);
+      pin.appendChild(caption);
+      pin.appendChild(progress);
+      stage.appendChild(pin);
+
+      stage._vgs = { video: video, bar: bar, ready: false, loading: false };
+    });
+
+    function videoUrl(file){
+      return CDN_BASE + file;
+    }
+
+    function loadStage(stage){
+      var s = stage._vgs;
+      if (s.loading || s.ready) return;
+      s.loading = true;
+      s.video.addEventListener('loadedmetadata', function(){
+        s.ready = true;
+        s.video.classList.add('vgs-ready');
+      }, { once: true });
+      s.video.src = videoUrl(stage.dataset.file);
+      s.video.load();
+    }
+
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) loadStage(entry.target);
+      });
+    }, { rootMargin: '50% 0px 50% 0px' });
+
+    stages.forEach(function(stage){ io.observe(stage); });
+
+    return function updateScroll(){
+      var vh = window.innerHeight;
+      stages.forEach(function(stage){
+        var rect = stage.getBoundingClientRect();
+        var total = stage.offsetHeight - vh;
+        if (total <= 0) { return; }
+
+        if (rect.top > 0) {
+          stage.classList.remove('vgs-fixed','vgs-below');
+        } else if (rect.top <= 0 && rect.bottom > vh) {
+          stage.classList.add('vgs-fixed');
+          stage.classList.remove('vgs-below');
+        } else if (rect.bottom <= vh) {
+          stage.classList.remove('vgs-fixed');
+          stage.classList.add('vgs-below');
+        }
+
+        var progress = Math.min(1, Math.max(0, -rect.top / total));
+        var s = stage._vgs;
+        if (s.ready && s.video.duration) {
+          var t = progress * s.video.duration;
+          if (Math.abs(s.video.currentTime - t) > 0.03) {
+            try { s.video.currentTime = t; } catch(e){}
+          }
+        }
+        s.bar.style.height = (progress * 100) + '%';
+      });
+    };
+  }
+
+  var updaters = [wireUp('vgs-root'), wireUp('vgs-root-films')].filter(Boolean);
+
+  var ticking = false;
+  function updateAll(){
+    ticking = false;
+    updaters.forEach(function(fn){ fn(); });
+  }
+
+  window.addEventListener('scroll', function(){
+    if (!ticking) { ticking = true; requestAnimationFrame(updateAll); }
+  }, { passive: true });
+  window.addEventListener('resize', updateAll);
+  updateAll();
+})();
+</script>
+</body>
+</html>
